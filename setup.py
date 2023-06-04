@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re
+import os
 
 from setuptools import setup
 
@@ -15,11 +16,17 @@ with open('mcutil/__init__.py', 'r') as f:
 assert version is not None, \
     'Could not determine version number from jaeger_client/__init__.py'
 
+
+def __read__(file_name):
+    return open(os.path.join(os.path.dirname(__file__), file_name)).read()
+
+
 setup(
     name='mcutil',
     version=version,
     url='https://github.com/cuongpiger/mcutil',
     description='Some simple utilities for Python',
+    long_description=__read__('README.md'),
     author='Cuong. Duong Manh',
     author_email='cuongdm8499@gmail.com',
     include_package_data=True,
