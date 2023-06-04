@@ -1,1 +1,4 @@
 /dist/
+/mcutil.egg-info/
+.idea
+.vscode
