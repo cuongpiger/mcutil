@@ -5,7 +5,7 @@ import os
 
 from setuptools import setup
 
-version = "1.0.0"
+version = None
 with open('mcutil/__init__.py', 'r') as f:
     for line in f:
         m = re.match(r'^__version__\s*=\s*(["\'])([^"\']+)\1', line)
