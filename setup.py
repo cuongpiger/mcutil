@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import re
+
+from setuptools import setup
+
+version = "1.0.0"
+with open('mcutil/__init__.py', 'r') as f:
+    for line in f:
+        m = re.match(r'^__version__\s*=\s*(["\'])([^"\']+)\1', line)
+        if m:
+            version = m.group(2)
+            break
+
+assert version is not None, \
+    'Could not determine version number from jaeger_client/__init__.py'
+
+setup(
+    name='mcutil',
+    version=version,
+    url='https://github.com/cuongpiger/mcutil',
+    description='Some simple utilities for Python',
+    author='Cuong. Duong Manh',
+    author_email='cuongdm8499@gmail.com',
+    include_package_data=True,
+    license='Apache License 2.0',
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+    ],
+    python_requires='>=3.7',
+    install_requires=[],
+)

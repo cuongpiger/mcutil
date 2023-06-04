@@ -1,0 +1,10 @@
+LICENSE
+setup.cfg
+setup.py
+mcutil/__init__.py
+mcutil/printer.py
+mcutil.egg-info/PKG-INFO
+mcutil.egg-info/SOURCES.txt
+mcutil.egg-info/dependency_links.txt
+mcutil.egg-info/not-zip-safe
+mcutil.egg-info/top_level.txt
