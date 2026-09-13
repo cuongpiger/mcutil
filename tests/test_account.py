@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from mcutil.api import db
-from mcutil.api.account import Account, Sex, create_account
+from mcutil.api.account import Account, Sex, create_account, get_account
 
 
 @pytest_asyncio.fixture
@@ -59,3 +59,34 @@ async def test_account_is_readable_after_commit(session):
     assert fetched.name == "Carol"
     assert fetched.sex is Sex.other
     assert fetched.balance == 42.5
+
+
+@pytest.mark.asyncio
+async def test_get_account_returns_the_account(session):
+    created = await create_account(session, "Alice", Sex.female, 5000.0)
+    await session.commit()
+
+    fetched = await get_account(session, created.id)
+
+    assert fetched is not None
+    assert fetched.id == created.id
+    assert fetched.name == "Alice"
+    assert fetched.sex is Sex.female
+    assert fetched.balance == 5000.0
+
+
+@pytest.mark.asyncio
+async def test_get_account_returns_none_for_missing_id(session):
+    assert await get_account(session, 999) is None
+
+
+@pytest.mark.asyncio
+async def test_get_account_returns_the_requested_account(session):
+    first = await create_account(session, "Alice", Sex.female, 1.0)
+    second = await create_account(session, "Bob", Sex.male, 2.0)
+    await session.commit()
+
+    fetched = await get_account(session, second.id)
+
+    assert fetched.name == "Bob"
+    assert fetched.id != first.id
