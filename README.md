@@ -1,2 +1,36 @@
 # Introduction
 - My personal package for Python
+
+## API service
+
+A FastAPI service for fetching current crypto prices from Binance.
+
+### Install
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run
+
+```bash
+uvicorn mcutil.api.app:app --reload
+```
+
+### Usage
+
+```bash
+# Fetch the current price of Bitcoin
+curl http://127.0.0.1:8000/price/BTCUSDT
+# {"symbol":"BTCUSDT","price":"77294.00000000"}
+
+# Lowercase is accepted
+curl http://127.0.0.1:8000/price/ethusdt
+```
+
+### Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
