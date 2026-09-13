@@ -196,3 +196,48 @@ def test_create_account_accepts_sex_other(account_client):
     )
     assert resp.status_code == 201
     assert resp.json()["sex"] == "other"
+
+
+# ── Account retrieval endpoint ──────────────────────────────────────────────
+
+
+def test_get_account_success(account_client):
+    created = account_client.post(
+        "/accounts",
+        json={"name": "Alice", "sex": "female", "balance": 5000.0},
+    ).json()
+
+    resp = account_client.get(f"/accounts/{created['id']}")
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "id": created["id"],
+        "name": "Alice",
+        "sex": "female",
+        "balance": 5000.0,
+    }
+
+
+def test_get_account_not_found(account_client):
+    resp = account_client.get("/accounts/999")
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Account not found."
+
+
+def test_get_account_non_integer_id(account_client):
+    resp = account_client.get("/accounts/abc")
+    assert resp.status_code == 422
+
+
+def test_get_account_returns_the_requested_account(account_client):
+    account_client.post(
+        "/accounts", json={"name": "Alice", "sex": "female", "balance": 1.0}
+    )
+    bob = account_client.post(
+        "/accounts", json={"name": "Bob", "sex": "male", "balance": 2.0}
+    ).json()
+
+    resp = account_client.get(f"/accounts/{bob['id']}")
+
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "Bob"

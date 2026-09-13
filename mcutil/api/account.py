@@ -41,3 +41,13 @@ async def create_account(
     session.add(account)
     await session.flush()
     return account
+
+
+async def get_account(
+    session: AsyncSession, account_id: int
+) -> Account | None:
+    """Return the account with *account_id*, or ``None`` if there is none.
+
+    A plain primary-key lookup; the caller decides what a missing row means.
+    """
+    return await session.get(Account, account_id)
