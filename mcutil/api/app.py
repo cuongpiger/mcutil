@@ -93,3 +93,18 @@ async def create_account(payload: AccountCreate):
         sex=created.sex,
         balance=created.balance,
     )
+
+
+@app.get("/accounts/{account_id}", response_model=AccountResponse)
+async def get_account(account_id: int):
+    """Retrieve a single account by its ``id``."""
+    async with db.async_session() as session:
+        found = await account.get_account(session, account_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail="Account not found.")
+    return AccountResponse(
+        id=found.id,
+        name=found.name,
+        sex=found.sex,
+        balance=found.balance,
+    )

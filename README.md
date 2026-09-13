@@ -40,6 +40,17 @@ curl -X POST http://127.0.0.1:8000/accounts \
 # {"id":1,"name":"Alice","sex":"female","balance":5000.0}
 ```
 
+Fetch an existing account by its ID:
+
+```bash
+curl http://127.0.0.1:8000/accounts/1
+# {"id":1,"name":"Alice","sex":"female","balance":5000.0}
+
+# An unknown ID returns 404
+curl http://127.0.0.1:8000/accounts/999
+# {"detail":"Account not found."}
+```
+
 ### Tests
 
 ```bash
