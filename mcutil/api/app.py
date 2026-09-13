@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import FastAPI, HTTPException, Path
 from pydantic import BaseModel
 
-from . import binance, vnstock
+from . import account, binance, db, vnstock
 
 
 class PriceResponse(BaseModel):
@@ -14,9 +14,11 @@ class PriceResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await db.init_db()
     yield
     await binance.close_client()
     await vnstock.close_client()
+    await db.close_engine()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -62,3 +64,32 @@ async def get_vn_price(symbol: VnSymbolPath):
             detail="Failed to fetch price from Vietnamese stock market.",
         )
     return PriceResponse(symbol=data["symbol"], price=data["price"])
+
+
+class AccountCreate(BaseModel):
+    name: str
+    sex: account.Sex
+    balance: float
+
+
+class AccountResponse(BaseModel):
+    id: int
+    name: str
+    sex: account.Sex
+    balance: float
+
+
+@app.post("/accounts", response_model=AccountResponse, status_code=201)
+async def create_account(payload: AccountCreate):
+    """Create a new account and return it with its generated ``id``."""
+    async with db.async_session() as session:
+        created = await account.create_account(
+            session, payload.name, payload.sex, payload.balance
+        )
+        await session.commit()
+    return AccountResponse(
+        id=created.id,
+        name=created.name,
+        sex=created.sex,
+        balance=created.balance,
+    )
