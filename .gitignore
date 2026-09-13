@@ -50,3 +50,6 @@ coverage.xml
 docs/_build/
 .idea
 .vscode
+
+# SQLite databases
+*.db

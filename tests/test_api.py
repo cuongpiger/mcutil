@@ -121,3 +121,78 @@ def test_get_vn_price_lowercase_symbol(client, mock_vn_get_price):
 def test_get_vn_price_numeric_rejected(client, mock_vn_get_price):
     resp = client.get("/vprice/FP1")  # numbers not allowed
     assert resp.status_code == 422
+
+
+# ── Account creation endpoint ───────────────────────────────────────────────
+
+
+@pytest.fixture
+def account_client(monkeypatch):
+    """Client backed by a throwaway in-memory database."""
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from sqlalchemy.pool import StaticPool
+
+    from mcutil.api import db
+
+    test_engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    monkeypatch.setattr(db, "engine", test_engine)
+    monkeypatch.setattr(
+        db, "async_session", async_sessionmaker(test_engine, expire_on_commit=False)
+    )
+    with TestClient(app) as c:
+        yield c
+
+
+def test_create_account_success(account_client):
+    resp = account_client.post(
+        "/accounts",
+        json={"name": "Alice", "sex": "female", "balance": 5000.0},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["id"] == 1
+    assert body["name"] == "Alice"
+    assert body["sex"] == "female"
+    assert body["balance"] == 5000.0
+
+
+def test_create_account_invalid_sex(account_client):
+    resp = account_client.post(
+        "/accounts",
+        json={"name": "Alice", "sex": "unknown", "balance": 5000.0},
+    )
+    assert resp.status_code == 422
+
+
+def test_create_account_missing_name(account_client):
+    resp = account_client.post(
+        "/accounts", json={"sex": "female", "balance": 5000.0}
+    )
+    assert resp.status_code == 422
+
+
+def test_create_account_missing_balance(account_client):
+    resp = account_client.post(
+        "/accounts", json={"name": "Alice", "sex": "female"}
+    )
+    assert resp.status_code == 422
+
+
+def test_create_account_non_numeric_balance(account_client):
+    resp = account_client.post(
+        "/accounts",
+        json={"name": "Alice", "sex": "female", "balance": "not-a-number"},
+    )
+    assert resp.status_code == 422
+
+
+def test_create_account_accepts_sex_other(account_client):
+    resp = account_client.post(
+        "/accounts", json={"name": "Carol", "sex": "other", "balance": 0.0}
+    )
+    assert resp.status_code == 201
+    assert resp.json()["sex"] == "other"
