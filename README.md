@@ -28,6 +28,18 @@ curl http://127.0.0.1:8000/price/BTCUSDT
 curl http://127.0.0.1:8000/price/ethusdt
 ```
 
+### Account management
+
+Create a new account by POSTing a JSON body with the owner's name, sex
+(`male`, `female`, or `other`), and starting balance:
+
+```bash
+curl -X POST http://127.0.0.1:8000/accounts \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice","sex":"female","balance":5000.0}'
+# {"id":1,"name":"Alice","sex":"female","balance":5000.0}
+```
+
 ### Tests
 
 ```bash
