@@ -51,6 +51,28 @@ curl http://127.0.0.1:8000/accounts/999
 # {"detail":"Account not found."}
 ```
 
+Deposit money into an account. The amount must be positive; the account's
+balance is credited and the deposit is recorded for auditing:
+
+```bash
+curl -X POST http://127.0.0.1:8000/accounts/1/deposits \
+  -H "Content-Type: application/json" \
+  -d '{"amount":250.0}'
+# {"id":1,"account_id":1,"amount":250.0,"type":"deposit","created_at":"2026-09-14T03:25:00"}
+
+# A non-positive amount is rejected
+curl -X POST http://127.0.0.1:8000/accounts/1/deposits \
+  -H "Content-Type: application/json" \
+  -d '{"amount":-50.0}'
+# {"detail":"Deposit amount must be positive."}
+
+# An unknown account ID returns 404
+curl -X POST http://127.0.0.1:8000/accounts/999/deposits \
+  -H "Content-Type: application/json" \
+  -d '{"amount":250.0}'
+# {"detail":"Account not found."}
+```
+
 ### Tests
 
 ```bash

@@ -241,3 +241,106 @@ def test_get_account_returns_the_requested_account(account_client):
 
     assert resp.status_code == 200
     assert resp.json()["name"] == "Bob"
+
+
+def _make_account(client, balance=5000.0):
+    """Create an account and return its id."""
+    resp = client.post(
+        "/accounts",
+        json={"name": "Alice", "sex": "female", "balance": balance},
+    )
+    assert resp.status_code == 201
+    return resp.json()["id"]
+
+
+def test_deposit_success(account_client):
+    account_id = _make_account(account_client)
+
+    resp = account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": 250.0}
+    )
+
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["id"] == 1
+    assert body["account_id"] == account_id
+    assert body["amount"] == 250.0
+    assert body["type"] == "deposit"
+    assert body["created_at"]
+
+
+def test_deposit_updates_account_balance(account_client):
+    account_id = _make_account(account_client, balance=5000.0)
+
+    account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": 250.0}
+    )
+
+    fetched = account_client.get(f"/accounts/{account_id}")
+    assert fetched.json()["balance"] == 5250.0
+
+
+def test_deposit_invalid_amount_zero(account_client):
+    account_id = _make_account(account_client)
+
+    resp = account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": 0}
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["detail"] == "Deposit amount must be positive."
+
+
+def test_deposit_invalid_amount_negative(account_client):
+    account_id = _make_account(account_client)
+
+    resp = account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": -100.0}
+    )
+
+    assert resp.status_code == 422
+    assert resp.json()["detail"] == "Deposit amount must be positive."
+
+
+def test_deposit_rejected_amount_leaves_balance_unchanged(account_client):
+    account_id = _make_account(account_client, balance=5000.0)
+
+    account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": -100.0}
+    )
+
+    fetched = account_client.get(f"/accounts/{account_id}")
+    assert fetched.json()["balance"] == 5000.0
+
+
+def test_deposit_missing_amount_field(account_client):
+    account_id = _make_account(account_client)
+
+    resp = account_client.post(f"/accounts/{account_id}/deposits", json={})
+
+    assert resp.status_code == 422
+
+
+def test_deposit_non_numeric_amount(account_client):
+    account_id = _make_account(account_client)
+
+    resp = account_client.post(
+        f"/accounts/{account_id}/deposits", json={"amount": "lots"}
+    )
+
+    assert resp.status_code == 422
+
+
+def test_deposit_account_not_found(account_client):
+    resp = account_client.post("/accounts/999/deposits", json={"amount": 250.0})
+
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Account not found."
+
+
+def test_deposit_non_integer_account_id(account_client):
+    resp = account_client.post(
+        "/accounts/abc/deposits", json={"amount": 250.0}
+    )
+
+    assert resp.status_code == 422

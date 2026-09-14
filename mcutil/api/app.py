@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Path
 from pydantic import BaseModel
 
-from . import account, binance, db, vnstock
+from . import account, binance, db, transaction, vnstock
 
 
 class PriceResponse(BaseModel):
@@ -107,4 +108,43 @@ async def get_account(account_id: int):
         name=found.name,
         sex=found.sex,
         balance=found.balance,
+    )
+
+
+class DepositRequest(BaseModel):
+    amount: float
+
+
+class DepositResponse(BaseModel):
+    id: int
+    account_id: int
+    amount: float
+    type: str
+    created_at: datetime
+
+
+@app.post(
+    "/accounts/{account_id}/deposits",
+    response_model=DepositResponse,
+    status_code=201,
+)
+async def deposit(account_id: int, payload: DepositRequest):
+    """Credit money to an account and record the deposit."""
+    if payload.amount <= 0:
+        raise HTTPException(
+            status_code=422, detail="Deposit amount must be positive."
+        )
+    async with db.async_session() as session:
+        recorded = await transaction.deposit(
+            session, account_id, payload.amount
+        )
+        if recorded is None:
+            raise HTTPException(status_code=404, detail="Account not found.")
+        await session.commit()
+    return DepositResponse(
+        id=recorded.id,
+        account_id=recorded.account_id,
+        amount=recorded.amount,
+        type=recorded.type.value,
+        created_at=recorded.created_at,
     )
